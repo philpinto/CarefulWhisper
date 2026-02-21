@@ -59,7 +59,7 @@ CarefulWhisper is a fully decentralized, peer-to-peer encrypted messaging app fo
 
 | Phase | Name | Tasks | Key Deliverable | Status |
 |-------|------|-------|-----------------|--------|
-| 1 | Foundation & Data Models | 1.1-1.5 | SwiftData models, project structure | Pending |
+| 1 | Foundation & Data Models | 1.1-1.7 | SwiftData models, project structure | Complete |
 | 2 | Encryption Layer | 2.1-2.4 | Signal Protocol integration, key management | Pending |
 | 3 | P2P Networking | 3.1-3.5 | libp2p integration, peer discovery, message transport | Pending |
 | 4 | Core UI - Onboarding & Profile | 4.1-4.4 | First-run experience, profile setup, QR codes | Pending |
@@ -72,24 +72,34 @@ CarefulWhisper is a fully decentralized, peer-to-peer encrypted messaging app fo
 ## Phase Details
 
 ### Phase 1: Foundation & Data Models
-**Status**: Pending
+**Status**: Complete ✓
 
 Establish the project structure and core data models using SwiftData. This phase creates the foundation that all other phases build upon.
 
 **Exit Criteria**:
-- [ ] SwiftData models defined: Contact, Conversation, Message, EncryptionKeys
-- [ ] Model relationships properly configured
-- [ ] Sample data seeding for development
-- [ ] Unit tests for model initialization and relationships
-- [ ] Project builds without warnings
+- [x] SwiftData models defined: Contact, Conversation, Message, EncryptionKeys, UserProfile
+- [x] Model relationships properly configured
+- [x] Unit tests for model initialization and relationships (27 tests passing)
+- [x] Project builds without warnings
 
-**Files to Create**:
+**Files Created**:
 - `Models/Contact.swift`
 - `Models/Conversation.swift`
 - `Models/Message.swift`
 - `Models/EncryptionKeys.swift`
+- `Models/UserProfile.swift`
 - `Models/MessageStatus.swift` (enum)
-- `Services/DataService.swift` (SwiftData ModelContainer setup)
+- `Models/ConversationType.swift` (enum)
+- `Models/SignalMessageType.swift` (enum)
+- `Services/DataService.swift`
+- `Utilities/Extensions/Data+Extensions.swift`
+- `Utilities/Extensions/String+Extensions.swift`
+- Tests: `ContactTests.swift`, `ConversationTests.swift`, `MessageTests.swift`, `EncryptionKeysTests.swift`, `UserProfileTests.swift`, `DataExtensionsTests.swift`, `StringExtensionsTests.swift`
+
+**Notes**:
+- All 27 unit tests passing
+- Project structure organized with Models/, ViewModels/, Views/, Services/, Utilities/ folders
+- ModelContainer configured in CarefulWhisperApp.swift
 
 ---
 

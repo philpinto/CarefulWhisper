@@ -241,6 +241,11 @@ final class ContactRequestService {
         
         pendingRequests.append(request)
         
+        // Show local notification if app is in background
+        Task {
+            await NotificationService.shared.showContactRequestNotification(from: payload.senderName)
+        }
+        
         print("[ContactRequest] Received contact request from \(payload.senderName)")
         onRequestReceived?(request)
     }

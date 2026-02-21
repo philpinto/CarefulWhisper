@@ -37,6 +37,10 @@ struct CarefulWhisperApp: App {
                     // Configure services synchronously before any child views load
                     appServices.configure(with: modelContainer.mainContext)
                 }
+                .task {
+                    // Request notification permissions
+                    _ = await NotificationService.shared.requestAuthorization()
+                }
         }
     }
 }

@@ -212,6 +212,13 @@ final class MessageTransportService {
             // Send delivery receipt
             await p2pService.sendDeliveryReceipt(for: envelope.id, to: envelope.senderId)
             
+            // Show local notification if app is in background
+            await NotificationService.shared.showMessageNotification(
+                from: contact.displayName,
+                messagePreview: decryptedMessage.content,
+                conversationId: conversation.id
+            )
+            
             // Notify UI
             onMessageReceived?(message)
             
@@ -310,13 +317,41 @@ final class MessageTransportService {
             predicate: #Predicate { $0.peerId == peerId }
         )
         
-        guard let contact = try? context.fetch(contactDescriptor).first else {
+        var contact = try? context.fetch(contactDescriptor).first
+        
+        // If not found by peer ID, try to find by public key match
+        if contact == nil {
+            print("[MessageTransport] Contact not found by peerId: \(peerId.prefix(16))..., searching by public key")
+            
+            // Get the peer info from P2P service to get the public key
+            if let peerInfo = p2pService.getPeerInfo(for: peerId) {
+                let publicKey = peerInfo.publicKey
+                let allContactsDescriptor = FetchDescriptor<Contact>()
+                if let allContacts = try? context.fetch(allContactsDescriptor) {
+                    contact = allContacts.first { $0.publicKey == publicKey }
+                    if let foundContact = contact {
+                        print("[MessageTransport] Found contact by public key: \(foundContact.displayName)")
+                        // Update the contact's peerId to match current network ID
+                        foundContact.peerId = peerId
+                        try? context.save()
+                    }
+                }
+            }
+        }
+        
+        guard let contact = contact else {
+            print("[MessageTransport] No contact found for peerId: \(peerId.prefix(16))...")
             return nil
         }
         
-        // Find or create conversation
-        if let conversation = contact.conversations.first(where: { $0.type == .oneToOne }) {
-            return (contact, conversation)
+        // Find existing conversation with this contact
+        let conversationDescriptor = FetchDescriptor<Conversation>()
+        if let conversations = try? context.fetch(conversationDescriptor) {
+            if let existingConversation = conversations.first(where: { 
+                $0.type == .oneToOne && $0.participants.contains(where: { $0.id == contact.id })
+            }) {
+                return (contact, existingConversation)
+            }
         }
         
         // Create new conversation

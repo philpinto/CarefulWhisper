@@ -28,7 +28,10 @@ final class CarefulWhisperUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        // Verify onboarding screen appears for new users
+        // The app should show the onboarding view with "CarefulWhisper" title
+        let exists = app.staticTexts["CarefulWhisper"].waitForExistence(timeout: 5)
+        XCTAssertTrue(exists || app.tabBars.count > 0, "App should show either onboarding or main tab view")
     }
 
     @MainActor

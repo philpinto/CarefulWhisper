@@ -11,6 +11,7 @@ import SwiftData
 @main
 struct CarefulWhisperApp: App {
     let modelContainer: ModelContainer
+    @State private var appServices = AppServices()
     
     init() {
         do {
@@ -30,6 +31,11 @@ struct CarefulWhisperApp: App {
         WindowGroup {
             ContentView()
                 .modelContainer(modelContainer)
+                .environment(\.appServices, appServices)
+                .task {
+                    // Configure services with model context
+                    appServices.configure(with: modelContainer.mainContext)
+                }
         }
     }
 }

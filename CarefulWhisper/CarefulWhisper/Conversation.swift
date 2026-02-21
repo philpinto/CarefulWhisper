@@ -15,7 +15,7 @@ class Conversation {
     var groupName: String?
     var groupAdminIds: [UUID]?
     
-    init(type: ConversationType, participants: [Contact]) {
+    init(type: ConversationType, participants: [Contact] = []) {
         self.id = UUID()
         self.type = type
         self.participants = participants

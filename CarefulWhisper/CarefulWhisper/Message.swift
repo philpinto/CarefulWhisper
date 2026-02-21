@@ -16,11 +16,11 @@ class Message {
     var encryptedPayload: Data?
     var signalMessageType: SignalMessageType
     
-    init(content: String, sender: Contact, conversation: Conversation, isFromMe: Bool) {
+    init(content: String, sender: Contact? = nil, conversation: Conversation? = nil, isFromMe: Bool, status: MessageStatus = .sending) {
         self.id = UUID()
         self.content = content
         self.timestamp = Date()
-        self.status = .sending
+        self.status = status
         self.sender = sender
         self.conversation = conversation
         self.isFromMe = isFromMe

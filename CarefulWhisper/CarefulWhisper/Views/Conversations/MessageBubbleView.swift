@@ -41,6 +41,22 @@ struct MessageBubbleView: View {
                 Spacer(minLength: 60)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+        .accessibilityHint(isFromMe ? "Sent message" : "Received message")
+    }
+    
+    private var accessibilityDescription: String {
+        let direction = isFromMe ? "You said" : "They said"
+        let statusText: String
+        switch message.status {
+        case .sending: statusText = ", sending"
+        case .sent: statusText = ", sent"
+        case .delivered: statusText = ", delivered"
+        case .read: statusText = ", read"
+        case .failed: statusText = ", failed to send"
+        }
+        return "\(direction): \(message.content), \(timeString)\(isFromMe ? statusText : "")"
     }
     
     // MARK: - Styling

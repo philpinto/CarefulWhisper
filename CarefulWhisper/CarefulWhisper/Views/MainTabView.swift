@@ -9,6 +9,7 @@ struct MainTabView: View {
         case contacts
         case messages
         case profile
+        case settings
     }
     
     var body: some View {
@@ -33,6 +34,13 @@ struct MainTabView: View {
                     Label("Profile", systemImage: "person.crop.circle.fill")
                 }
                 .tag(Tab.profile)
+            
+            // Settings tab
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
+                .tag(Tab.settings)
         }
     }
 }

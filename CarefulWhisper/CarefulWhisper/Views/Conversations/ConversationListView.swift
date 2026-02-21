@@ -160,6 +160,20 @@ struct ConversationRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+    }
+    
+    private var accessibilityDescription: String {
+        var description = "Conversation with \(displayName)"
+        if isOnline {
+            description += ", online"
+        }
+        if unreadCount > 0 {
+            description += ", \(unreadCount) unread message\(unreadCount == 1 ? "" : "s")"
+        }
+        description += ". Last message: \(lastMessage), \(time)"
+        return description
     }
 }
 

@@ -400,6 +400,9 @@
 				DEVELOPMENT_TEAM = 35J678BFM7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "CarefulWhisper needs camera access to scan QR codes for adding contacts.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "CarefulWhisper uses the local network to discover and communicate with nearby contacts.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -433,6 +436,9 @@
 				DEVELOPMENT_TEAM = 35J678BFM7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "CarefulWhisper needs camera access to scan QR codes for adding contacts.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "CarefulWhisper uses the local network to discover and communicate with nearby contacts.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

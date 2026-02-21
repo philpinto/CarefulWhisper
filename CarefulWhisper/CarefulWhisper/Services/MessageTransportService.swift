@@ -117,6 +117,16 @@ final class MessageTransportService {
         }
     }
     
+    /// Send read receipts for messages from a contact
+    /// - Parameters:
+    ///   - messageIds: The IDs of messages that have been read
+    ///   - contact: The sender of those messages
+    func sendReadReceipts(for messageIds: [UUID], to contact: Contact) async {
+        for messageId in messageIds {
+            await p2pService.sendReadReceipt(for: messageId, to: contact.peerId)
+        }
+    }
+    
     /// Retry sending a failed message
     func retryMessage(_ message: Message, to contact: Contact) async throws {
         guard message.status == MessageStatus.failed else { return }

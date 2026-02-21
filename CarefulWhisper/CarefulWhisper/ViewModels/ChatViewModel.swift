@@ -138,18 +138,23 @@ final class ChatViewModel {
     // MARK: - Read Receipts
     
     func markMessagesAsRead() {
-        var hasChanges = false
+        var messagesToMarkRead: [Message] = []
         
         for message in messages where !message.isFromMe && message.status != .read {
             message.status = .read
-            hasChanges = true
+            messagesToMarkRead.append(message)
         }
         
-        if hasChanges {
+        if !messagesToMarkRead.isEmpty {
             try? modelContext?.save()
             
-            // Send read receipts via P2P (would need to implement in transport service)
-            // TODO: Implement read receipt sending
+            // Send read receipts via P2P
+            if let recipient = recipient {
+                let messageIds = messagesToMarkRead.map { $0.id }
+                Task {
+                    await messageTransportService?.sendReadReceipts(for: messageIds, to: recipient)
+                }
+            }
         }
     }
     

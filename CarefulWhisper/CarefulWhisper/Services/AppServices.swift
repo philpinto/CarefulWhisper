@@ -13,6 +13,7 @@ final class AppServices {
     let encryptionService: EncryptionService
     let p2pNetworkService: P2PNetworkService
     let messageTransportService: MessageTransportService
+    let presenceService: PresenceService
     
     // MARK: - State
     
@@ -30,6 +31,7 @@ final class AppServices {
             encryptionService: encryptionService,
             p2pService: p2pNetworkService
         )
+        self.presenceService = PresenceService()
     }
     
     // MARK: - Configuration
@@ -40,6 +42,7 @@ final class AppServices {
         
         self.modelContext = modelContext
         messageTransportService.setModelContext(modelContext)
+        presenceService.configure(modelContext: modelContext, p2pService: p2pNetworkService)
         isInitialized = true
     }
     

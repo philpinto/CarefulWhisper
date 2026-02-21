@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import AudioToolbox
 
 /// Camera-based QR code scanner view
 struct QRScannerView: UIViewControllerRepresentable {

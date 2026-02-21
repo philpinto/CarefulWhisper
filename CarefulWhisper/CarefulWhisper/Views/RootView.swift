@@ -35,10 +35,30 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut, value: hasCompletedOnboarding)
+        .onChange(of: currentProfile) { oldProfile, newProfile in
+            // Start network when profile becomes available
+            if let profile = newProfile, oldProfile == nil {
+                print("[RootView] Profile loaded: \(profile.displayName), starting network...")
+                Task {
+                    do {
+                        try await appServices?.startNetwork(profile: profile)
+                        print("[RootView] Network started successfully")
+                    } catch {
+                        print("[RootView] ERROR: Failed to start network: \(error)")
+                    }
+                }
+            }
+        }
         .task {
-            // Start P2P network when user is logged in
+            // Also try on initial load in case query is already populated
+            print("[RootView] Task starting, profile: \(currentProfile?.displayName ?? "nil")")
             if let profile = currentProfile {
-                try? await appServices?.startNetwork(profile: profile)
+                do {
+                    try await appServices?.startNetwork(profile: profile)
+                    print("[RootView] Network started successfully")
+                } catch {
+                    print("[RootView] ERROR: Failed to start network: \(error)")
+                }
             }
         }
     }

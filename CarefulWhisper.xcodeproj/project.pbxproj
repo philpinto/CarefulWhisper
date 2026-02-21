@@ -36,9 +36,22 @@
 		D8E7969E2F4915FB00F95947 /* CarefulWhisperUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CarefulWhisperUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D872A0E12F49813600B53E53 /* Exceptions for "CarefulWhisper" folder in "CarefulWhisper" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D8E796862F4915FA00F95947 /* CarefulWhisper */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D8E796892F4915FA00F95947 /* CarefulWhisper */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D872A0E12F49813600B53E53 /* Exceptions for "CarefulWhisper" folder in "CarefulWhisper" target */,
+			);
 			path = CarefulWhisper;
 			sourceTree = "<group>";
 		};
@@ -406,12 +419,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 35J678BFM7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = CarefulWhisper/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "CarefulWhisper needs camera access to scan QR codes for adding contacts.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "CarefulWhisper uses the local network to discover and communicate with nearby contacts.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -424,7 +438,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = NineZeroSix.CarefulWhisper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -442,12 +456,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 35J678BFM7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = CarefulWhisper/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "CarefulWhisper needs camera access to scan QR codes for adding contacts.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "CarefulWhisper uses the local network to discover and communicate with nearby contacts.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -460,7 +475,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = NineZeroSix.CarefulWhisper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

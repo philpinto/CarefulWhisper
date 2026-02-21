@@ -48,6 +48,9 @@ struct P2PMessageEnvelope: Codable {
         case readReceipt      // Read confirmation
         case presence         // Online/offline status
         case handshake        // Initial connection handshake
+        case contactRequest   // Request to add as contact
+        case contactAccept    // Accept contact request
+        case contactDecline   // Decline contact request
     }
     
     init(id: UUID = UUID(), senderId: String, recipientId: String, encryptedPayload: Data, messageType: P2PMessageType = .message) {

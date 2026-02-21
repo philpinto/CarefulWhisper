@@ -20,7 +20,8 @@ struct CarefulWhisperApp: App {
                      Conversation.self,
                      Message.self,
                      EncryptionKeys.self,
-                     UserProfile.self
+                     UserProfile.self,
+                     ContactRequest.self
             )
         } catch {
             fatalError("Failed to create ModelContainer: \(error.localizedDescription)")
@@ -32,8 +33,8 @@ struct CarefulWhisperApp: App {
             ContentView()
                 .modelContainer(modelContainer)
                 .environment(\.appServices, appServices)
-                .task {
-                    // Configure services with model context
+                .onAppear {
+                    // Configure services synchronously before any child views load
                     appServices.configure(with: modelContainer.mainContext)
                 }
         }

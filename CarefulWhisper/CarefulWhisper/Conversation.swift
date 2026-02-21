@@ -13,7 +13,19 @@ class Conversation {
     
     // Group-specific properties
     var groupName: String?
-    var groupAdminIds: [UUID]?
+    
+    // Stored as JSON data since SwiftData can't directly persist Array<UUID>
+    private var groupAdminIdsData: Data?
+    
+    var groupAdminIds: [UUID]? {
+        get {
+            guard let data = groupAdminIdsData else { return nil }
+            return try? JSONDecoder().decode([UUID].self, from: data)
+        }
+        set {
+            groupAdminIdsData = try? JSONEncoder().encode(newValue)
+        }
+    }
     
     init(type: ConversationType, participants: [Contact] = []) {
         self.id = UUID()

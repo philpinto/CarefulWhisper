@@ -4,21 +4,37 @@ import SwiftData
 /// Displays the list of contacts
 struct ContactListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.appServices) private var appServices
+    
+    @Query(sort: \ContactRequest.receivedAt, order: .reverse)
+    private var allRequests: [ContactRequest]
+    
+    @Query(sort: \Contact.displayName)
+    private var contacts: [Contact]
+    
+    private var pendingRequests: [ContactRequest] {
+        allRequests.filter { $0.isIncoming && $0.status == .pending }
+    }
+    
     @State private var viewModel: ContactListViewModel?
     @State private var showAddContact = false
     @State private var selectedContact: Contact?
+    @State private var searchText = ""
+    
+    private var filteredContacts: [Contact] {
+        if searchText.isEmpty {
+            return contacts
+        }
+        return contacts.filter { $0.displayName.lowercased().contains(searchText.lowercased()) }
+    }
     
     var body: some View {
         NavigationStack {
             Group {
-                if let vm = viewModel {
-                    if vm.hasContacts {
-                        contactList(vm)
-                    } else {
-                        emptyState
-                    }
+                if !contacts.isEmpty || !pendingRequests.isEmpty {
+                    contactList
                 } else {
-                    ProgressView()
+                    emptyState
                 }
             }
             .navigationTitle("Contacts")
@@ -31,14 +47,9 @@ struct ContactListView: View {
                     }
                 }
             }
-            .searchable(text: Binding(
-                get: { viewModel?.searchText ?? "" },
-                set: { viewModel?.searchText = $0 }
-            ), prompt: "Search contacts")
-            .sheet(isPresented: $showAddContact) {
-                if let vm = viewModel {
-                    AddContactView(viewModel: vm)
-                }
+            .searchable(text: $searchText, prompt: "Search contacts")
+            .sheet(isPresented: $showAddContact, onDismiss: nil) {
+                AddContactView(viewModel: getOrCreateViewModel())
             }
             .sheet(item: $selectedContact) { contact in
                 ContactDetailView(contact: contact, onDelete: {
@@ -48,30 +59,76 @@ struct ContactListView: View {
             }
         }
         .onAppear {
-            if viewModel == nil {
-                viewModel = ContactListViewModel(modelContext: modelContext)
-            }
+            _ = getOrCreateViewModel()
         }
+    }
+    
+    private func getOrCreateViewModel() -> ContactListViewModel {
+        if let vm = viewModel {
+            return vm
+        }
+        let vm = ContactListViewModel(modelContext: modelContext)
+        if let service = appServices?.contactRequestService {
+            vm.setContactRequestService(service)
+        }
+        viewModel = vm
+        return vm
     }
     
     // MARK: - Contact List
     
-    private func contactList(_ vm: ContactListViewModel) -> some View {
+    private var contactList: some View {
         List {
-            ForEach(vm.filteredContacts) { contact in
-                ContactRow(contact: contact)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        selectedContact = contact
+            // Pending contact requests section
+            if !pendingRequests.isEmpty {
+                Section {
+                    ForEach(pendingRequests) { request in
+                        ContactRequestRow(
+                            request: request,
+                            onAccept: {
+                                Task {
+                                    await appServices?.contactRequestService.acceptRequest(request)
+                                }
+                            },
+                            onDecline: {
+                                Task {
+                                    await appServices?.contactRequestService.declineRequest(request)
+                                }
+                            }
+                        )
                     }
+                } header: {
+                    Label("Contact Requests", systemImage: "person.badge.plus")
+                }
             }
-            .onDelete { offsets in
-                vm.deleteContacts(at: offsets)
+            
+            // Contacts section
+            if !filteredContacts.isEmpty {
+                Section {
+                    ForEach(filteredContacts) { contact in
+                        ContactRow(contact: contact)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedContact = contact
+                            }
+                    }
+                    .onDelete { offsets in
+                        deleteContacts(at: offsets)
+                    }
+                } header: {
+                    if !pendingRequests.isEmpty {
+                        Text("Contacts")
+                    }
+                }
             }
         }
         .listStyle(.insetGrouped)
-        .refreshable {
-            vm.loadContacts()
+    }
+    
+    private func deleteContacts(at offsets: IndexSet) {
+        for index in offsets {
+            let contact = filteredContacts[index]
+            viewModel?.deleteContact(contact)
         }
     }
     
@@ -152,7 +209,94 @@ struct ContactRow: View {
     }
 }
 
+/// Row displaying a pending contact request with accept/decline actions
+struct ContactRequestRow: View {
+    let request: ContactRequest
+    let onAccept: () -> Void
+    let onDecline: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                // Avatar
+                Circle()
+                    .fill(avatarColor)
+                    .frame(width: 44, height: 44)
+                    .overlay {
+                        Text(initials)
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                    }
+                
+                // Name and time
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(request.senderName)
+                        .font(.body)
+                        .fontWeight(.medium)
+                    
+                    Text("Wants to connect")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+                
+                // Time ago
+                Text(timeAgo)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            
+            // Action buttons
+            HStack(spacing: 12) {
+                Button {
+                    onDecline()
+                } label: {
+                    Text("Decline")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                }
+                .buttonStyle(.bordered)
+                
+                Button {
+                    onAccept()
+                } label: {
+                    Text("Accept")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+    
+    private var initials: String {
+        let components = request.senderName.split(separator: " ")
+        if components.count >= 2 {
+            return String(components[0].prefix(1) + components[1].prefix(1)).uppercased()
+        }
+        return String(request.senderName.prefix(2)).uppercased()
+    }
+    
+    private var avatarColor: Color {
+        let hash = request.senderName.hashValue
+        let hue = Double(abs(hash) % 360) / 360.0
+        return Color(hue: hue, saturation: 0.6, brightness: 0.7)
+    }
+    
+    private var timeAgo: String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: request.receivedAt, relativeTo: Date())
+    }
+}
+
 #Preview {
     ContactListView()
-        .modelContainer(for: [Contact.self, Conversation.self, Message.self, UserProfile.self, EncryptionKeys.self])
+        .modelContainer(for: [Contact.self, Conversation.self, Message.self, UserProfile.self, EncryptionKeys.self, ContactRequest.self])
 }

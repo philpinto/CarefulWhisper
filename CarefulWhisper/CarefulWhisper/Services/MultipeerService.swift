@@ -64,6 +64,8 @@ final class MultipeerService: NSObject {
     func start(displayName: String, publicKey: Data) throws {
         guard !isRunning else { return }
         
+        print("[MultipeerService] Starting with displayName: \(displayName)")
+        
         localDisplayName = displayName
         localPublicKey = publicKey
         
@@ -102,6 +104,7 @@ final class MultipeerService: NSObject {
         browser?.startBrowsingForPeers()
         
         isRunning = true
+        print("[MultipeerService] Started - advertising and browsing for service type: \(serviceType)")
     }
     
     func stop() {
@@ -127,9 +130,17 @@ final class MultipeerService: NSObject {
     func connect(to peerId: String) throws {
         guard isRunning else { throw MultipeerError.notStarted }
         guard let mcPeerId = reversePeerIdMap[peerId] else {
+            print("[MultipeerService] Cannot connect - peer not found in map: \(peerId.prefix(16))...")
             throw MultipeerError.peerNotFound
         }
         
+        // Check if already connected
+        if connectedPeers.contains(peerId) {
+            print("[MultipeerService] Already connected to peer: \(mcPeerId.displayName)")
+            return
+        }
+        
+        print("[MultipeerService] Sending invitation to peer: \(mcPeerId.displayName)")
         browser?.invitePeer(
             mcPeerId,
             to: session!,
@@ -190,6 +201,73 @@ final class MultipeerService: NSObject {
         connectedPeers.contains(peerId)
     }
     
+    /// Find a discovered peer by their public key
+    /// Returns the peerId if found
+    func findPeerByPublicKey(_ publicKey: Data) -> String? {
+        // First try direct hash lookup (fast path)
+        let targetPeerId = publicKey.sha256.hexString
+        if discoveredPeers[targetPeerId] != nil {
+            return targetPeerId
+        }
+        
+        // Also check if we have it in the reverse map
+        if reversePeerIdMap[targetPeerId] != nil {
+            return targetPeerId
+        }
+        
+        // Fall back to searching by comparing actual public key bytes
+        // This handles cases where the peer's key might be stored differently
+        for (peerId, peerInfo) in discoveredPeers {
+            if peerInfo.publicKey == publicKey {
+                return peerId
+            }
+        }
+        
+        return nil
+    }
+    
+    /// Connect to a peer using their public key
+    /// This finds the peer by public key and initiates connection
+    func connectByPublicKey(_ publicKey: Data) throws {
+        guard isRunning else { throw MultipeerError.notStarted }
+        
+        // First try to find by hash
+        var targetPeerId = publicKey.sha256.hexString
+        var mcPeerId = reversePeerIdMap[targetPeerId]
+        
+        // If not found by hash, search by comparing actual public key bytes
+        if mcPeerId == nil {
+            for (peerId, peerInfo) in discoveredPeers {
+                if peerInfo.publicKey == publicKey {
+                    targetPeerId = peerId
+                    mcPeerId = reversePeerIdMap[peerId]
+                    print("[MultipeerService] Found peer by public key comparison: \(peerId.prefix(16))...")
+                    break
+                }
+            }
+        }
+        
+        guard let foundMcPeerId = mcPeerId else {
+            print("[MultipeerService] Cannot connect by public key - peer not discovered. Target: \(targetPeerId.prefix(16))...")
+            print("[MultipeerService] Known peers: \(reversePeerIdMap.keys.map { String($0.prefix(16)) + "..." })")
+            throw MultipeerError.peerNotFound
+        }
+        
+        // Check if already connected
+        if connectedPeers.contains(targetPeerId) {
+            print("[MultipeerService] Already connected to peer via public key")
+            return
+        }
+        
+        print("[MultipeerService] Connecting to peer by public key: \(foundMcPeerId.displayName)")
+        browser?.invitePeer(
+            foundMcPeerId,
+            to: session!,
+            withContext: localPublicKey,
+            timeout: 30
+        )
+    }
+    
     // MARK: - Private Helpers
     
     private func peerIdString(from mcPeerId: MCPeerID, publicKey: Data) -> String {
@@ -202,11 +280,17 @@ final class MultipeerService: NSObject {
 
 extension MultipeerService: MCSessionDelegate {
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
-        guard let ourPeerId = mcPeerIdMap[peerID] else { return }
+        guard let ourPeerId = mcPeerIdMap[peerID] else {
+            // Peer not in map yet - this can happen during initial connection handshake
+            // The peer will be added to the map when browser discovers them or advertiser receives invitation
+            print("[MultipeerService] Session state changed for unmapped peer: \(peerID.displayName) - state: \(state.rawValue)")
+            return
+        }
         
         Task { @MainActor in
             switch state {
             case .connected:
+                print("[MultipeerService] Connected to peer: \(peerID.displayName)")
                 connectedPeers.insert(ourPeerId)
                 if var peerInfo = discoveredPeers[ourPeerId] {
                     peerInfo.isConnected = true
@@ -215,6 +299,7 @@ extension MultipeerService: MCSessionDelegate {
                 delegate?.didConnectToPeer(ourPeerId)
                 
             case .notConnected:
+                print("[MultipeerService] Disconnected from peer: \(peerID.displayName)")
                 connectedPeers.remove(ourPeerId)
                 if var peerInfo = discoveredPeers[ourPeerId] {
                     peerInfo.isConnected = false
@@ -223,7 +308,7 @@ extension MultipeerService: MCSessionDelegate {
                 delegate?.didDisconnectFromPeer(ourPeerId)
                 
             case .connecting:
-                break
+                print("[MultipeerService] Connecting to peer: \(peerID.displayName)")
                 
             @unknown default:
                 break
@@ -284,8 +369,7 @@ extension MultipeerService: MCNearbyServiceAdvertiserDelegate {
     }
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
-        // Handle advertising error
-        print("Failed to start advertising: \(error.localizedDescription)")
+        print("[MultipeerService] ERROR: Failed to start advertising: \(error.localizedDescription)")
     }
 }
 
@@ -295,12 +379,15 @@ extension MultipeerService: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
         guard let publicKeyString = info?["publicKey"],
               let publicKeyData = Data(base64Encoded: publicKeyString) else {
+            print("[MultipeerService] Found peer without valid public key: \(peerID.displayName)")
             return
         }
         
         let ourPeerId = peerIdString(from: peerID, publicKey: publicKeyData)
         mcPeerIdMap[peerID] = ourPeerId
         reversePeerIdMap[ourPeerId] = peerID
+        
+        print("[MultipeerService] Discovered peer: \(peerID.displayName) (peerId: \(ourPeerId.prefix(16))...)")
         
         let peerInfo = PeerInfo(
             id: ourPeerId,
@@ -328,6 +415,6 @@ extension MultipeerService: MCNearbyServiceBrowserDelegate {
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
-        print("Failed to start browsing: \(error.localizedDescription)")
+        print("[MultipeerService] ERROR: Failed to start browsing: \(error.localizedDescription)")
     }
 }

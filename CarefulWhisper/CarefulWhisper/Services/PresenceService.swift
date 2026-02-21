@@ -28,7 +28,19 @@ final class PresenceService {
         self.modelContext = modelContext
         self.p2pService = p2pService
         
-        setupCallbacks()
+        setupDiscoveryCallback()
+    }
+    
+    /// Called by MessageTransportService when a peer connects
+    func handlePeerConnected(_ peerId: String) {
+        onlinePeerIds.insert(peerId)
+        updateContactStatus(peerId: peerId, isOnline: true)
+    }
+    
+    /// Called by MessageTransportService when a peer disconnects
+    func handlePeerDisconnected(_ peerId: String) {
+        onlinePeerIds.remove(peerId)
+        updateContactStatus(peerId: peerId, isOnline: false)
     }
     
     // MARK: - Public Methods
@@ -94,34 +106,55 @@ final class PresenceService {
     
     // MARK: - Private Methods
     
-    private func setupCallbacks() {
-        p2pService?.onPeerConnected = { [weak self] peerId in
-            Task { @MainActor in
-                self?.handlePeerConnected(peerId)
-            }
-        }
-        
-        p2pService?.onPeerDisconnected = { [weak self] peerId in
-            Task { @MainActor in
-                self?.handlePeerDisconnected(peerId)
-            }
-        }
-        
+    // Only hook into discovery - connection events come through MessageTransportService
+    private func setupDiscoveryCallback() {
         p2pService?.onPeerDiscovered = { [weak self] peer in
             Task { @MainActor in
                 // Update last seen when peer is discovered (even if not connected)
                 self?.lastSeenTimes[peer.id] = Date()
+                
+                // Auto-connect to known contacts when discovered
+                self?.autoConnectIfKnownContact(peer)
             }
         }
     }
     
-    private func handlePeerConnected(_ peerId: String) {
-        onlinePeerIds.insert(peerId)
-        updateContactStatus(peerId: peerId, isOnline: true)
-    }
-    
-    private func handlePeerDisconnected(_ peerId: String) {
-        onlinePeerIds.remove(peerId)
-        updateContactStatus(peerId: peerId, isOnline: false)
+    /// Automatically connect to a peer if they are a known contact
+    private func autoConnectIfKnownContact(_ peer: PeerInfo) {
+        guard let context = modelContext else {
+            print("[PresenceService] No model context available")
+            return
+        }
+        
+        // Check if already connected
+        if p2pService?.isConnected(to: peer.id) == true {
+            print("[PresenceService] Already connected to peer: \(peer.displayName)")
+            // Update online status since we're connected
+            onlinePeerIds.insert(peer.id)
+            updateContactStatus(peerId: peer.id, isOnline: true)
+            return
+        }
+        
+        // Check if this peer is a known contact
+        let peerId = peer.id
+        let descriptor = FetchDescriptor<Contact>(
+            predicate: #Predicate { $0.peerId == peerId }
+        )
+        
+        guard let contact = try? context.fetch(descriptor).first else {
+            print("[PresenceService] Discovered peer '\(peer.displayName)' is not a known contact (peerId: \(peer.id.prefix(16))...)")
+            return
+        }
+        
+        // It's a known contact, try to connect
+        print("[PresenceService] Auto-connecting to known contact: \(contact.displayName) (peerId: \(peer.id.prefix(16))...)")
+        Task {
+            do {
+                try await p2pService?.connect(to: peer.id)
+                print("[PresenceService] Connection invitation sent to \(contact.displayName)")
+            } catch {
+                print("[PresenceService] Failed to auto-connect to \(contact.displayName): \(error)")
+            }
+        }
     }
 }

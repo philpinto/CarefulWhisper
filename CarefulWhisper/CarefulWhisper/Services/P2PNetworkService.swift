@@ -109,6 +109,16 @@ final class P2PNetworkService: P2PNetworkDelegate {
         multipeerService.getPeerInfo(for: peerId)
     }
     
+    /// Find a discovered peer by their public key
+    func findPeerByPublicKey(_ publicKey: Data) -> String? {
+        multipeerService.findPeerByPublicKey(publicKey)
+    }
+    
+    /// Connect to a peer using their public key
+    func connectByPublicKey(_ publicKey: Data) async throws {
+        try multipeerService.connectByPublicKey(publicKey)
+    }
+    
     // MARK: - Messaging
     
     /// Send a message to a peer

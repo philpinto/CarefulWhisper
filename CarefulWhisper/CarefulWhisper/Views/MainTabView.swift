@@ -3,7 +3,17 @@ import SwiftData
 
 /// Main tab-based navigation for the app
 struct MainTabView: View {
+    @Environment(\.appServices) private var appServices
+    
+    @Query(sort: \ContactRequest.receivedAt, order: .reverse)
+    private var allRequests: [ContactRequest]
+    
+    private var pendingRequests: [ContactRequest] {
+        allRequests.filter { $0.isIncoming && $0.status == .pending }
+    }
+    
     @State private var selectedTab: Tab = .messages
+    @State private var selectedRequest: ContactRequest?
     
     enum Tab: Hashable {
         case contacts
@@ -13,7 +23,8 @@ struct MainTabView: View {
     }
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        ZStack {
+            TabView(selection: $selectedTab) {
             // Contacts tab
             ContactListView()
                 .tabItem {
@@ -41,6 +52,34 @@ struct MainTabView: View {
                     Label("Settings", systemImage: "gearshape.fill")
                 }
                 .tag(Tab.settings)
+            }
+            
+            // Contact request banner overlay - uses @Query for sync with ContactListView
+            if let request = pendingRequests.first, selectedTab != .contacts {
+                VStack {
+                    ContactRequestBanner(request: request) {
+                        selectedRequest = request
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    
+                    Spacer()
+                }
+                .animation(.spring(), value: pendingRequests.first?.id)
+            }
+        }
+        .sheet(item: $selectedRequest) { request in
+            ContactRequestView(
+                request: request,
+                onAccepted: {
+                    selectedRequest = nil
+                },
+                onDeclined: {
+                    selectedRequest = nil
+                }
+            )
+            .presentationDetents([.medium])
         }
     }
 }

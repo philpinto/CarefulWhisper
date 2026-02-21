@@ -52,12 +52,12 @@ struct AddContactView: View {
             } message: {
                 Text(errorMessage)
             }
-            .alert("Contact Added", isPresented: $showSuccess) {
+            .alert("Request Sent", isPresented: $showSuccess) {
                 Button("OK") {
                     dismiss()
                 }
             } message: {
-                Text("Contact has been added successfully")
+                Text("Contact request sent! They will appear in your contacts once they accept.")
             }
         }
     }
@@ -134,15 +134,18 @@ struct AddContactView: View {
     
     private func handleScannedCode(_ code: String) {
         if let contactData = ContactQRParser.parse(code) {
-            if viewModel.addContact(
-                displayName: contactData.name,
-                publicKey: contactData.publicKey,
-                peerId: contactData.peerId
-            ) != nil {
-                showSuccess = true
-            } else {
-                errorMessage = viewModel.errorMessage ?? "Failed to add contact"
-                showError = true
+            Task {
+                let success = await viewModel.sendContactRequest(
+                    displayName: contactData.name,
+                    publicKey: contactData.publicKey,
+                    peerId: contactData.peerId
+                )
+                if success {
+                    showSuccess = true
+                } else {
+                    errorMessage = viewModel.errorMessage ?? "Failed to send contact request"
+                    showError = true
+                }
             }
         } else {
             errorMessage = "Invalid QR code format"
@@ -158,15 +161,18 @@ struct AddContactView: View {
         if let contactData = ContactQRParser.parse(trimmedId) {
             // Use parsed data, but override name if provided
             let nameToUse = trimmedName.isEmpty ? contactData.name : trimmedName
-            if viewModel.addContact(
-                displayName: nameToUse,
-                publicKey: contactData.publicKey,
-                peerId: contactData.peerId
-            ) != nil {
-                showSuccess = true
-            } else {
-                errorMessage = viewModel.errorMessage ?? "Failed to add contact"
-                showError = true
+            Task {
+                let success = await viewModel.sendContactRequest(
+                    displayName: nameToUse,
+                    publicKey: contactData.publicKey,
+                    peerId: contactData.peerId
+                )
+                if success {
+                    showSuccess = true
+                } else {
+                    errorMessage = viewModel.errorMessage ?? "Failed to send contact request"
+                    showError = true
+                }
             }
         } else {
             // Treat as raw peer ID (hex string)

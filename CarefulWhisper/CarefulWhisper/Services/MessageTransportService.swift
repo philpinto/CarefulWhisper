@@ -22,6 +22,12 @@ final class MessageTransportService {
     var onMessageStatusChanged: ((UUID, MessageStatus) -> Void)?
     var onContactOnlineStatusChanged: ((String, Bool) -> Void)?
     
+    // Reference to presence service for connection notifications
+    weak var presenceService: PresenceService?
+    
+    // Reference to contact request service for handling contact requests
+    weak var contactRequestService: ContactRequestService?
+    
     // MARK: - Initialization
     
     init(encryptionService: EncryptionService, p2pService: P2PNetworkService) {
@@ -87,6 +93,7 @@ final class MessageTransportService {
             let envelopeData = try JSONEncoder().encode(envelope)
             
             // Send via P2P network
+            print("[MessageTransport] Sending message to \(contact.displayName) (peerId: \(contact.peerId.prefix(16))...)")
             let result = await p2pService.send(
                 encryptedPayload: envelopeData,
                 to: contact.peerId,
@@ -96,10 +103,13 @@ final class MessageTransportService {
             // Update message status based on result
             switch result {
             case .sent:
+                print("[MessageTransport] Message sent successfully")
                 message.status = MessageStatus.sent
             case .queued:
+                print("[MessageTransport] Message queued for later delivery (recipient offline)")
                 message.status = MessageStatus.sending
             case .failed(let error):
+                print("[MessageTransport] Message send failed: \(error)")
                 message.status = MessageStatus.failed
                 throw error
             }
@@ -170,12 +180,14 @@ final class MessageTransportService {
     // MARK: - Receiving Messages
     
     private func handleIncomingMessage(_ envelope: P2PMessageEnvelope) async {
+        print("[MessageTransport] Received message from: \(envelope.senderId.prefix(16))...")
         do {
             // Deserialize encrypted envelope
             let encryptedEnvelope = try EncryptedEnvelope.fromData(envelope.encryptedPayload)
             
             // Decrypt the message
             let decryptedMessage = try await encryptionService.decrypt(encryptedEnvelope)
+            print("[MessageTransport] Message decrypted successfully")
             
             // Find or create conversation
             guard let (contact, conversation) = findOrCreateConversation(for: envelope.senderId) else {
@@ -256,18 +268,22 @@ final class MessageTransportService {
                 case .handshake:
                     // Handle handshake for key exchange
                     break
+                case .contactRequest, .contactAccept, .contactDecline:
+                    self?.contactRequestService?.handleIncomingRequest(envelope)
                 }
             }
         }
         
         p2pService.onPeerConnected = { [weak self] peerId in
             Task { @MainActor in
+                self?.presenceService?.handlePeerConnected(peerId)
                 self?.onContactOnlineStatusChanged?(peerId, true)
             }
         }
         
         p2pService.onPeerDisconnected = { [weak self] peerId in
             Task { @MainActor in
+                self?.presenceService?.handlePeerDisconnected(peerId)
                 self?.onContactOnlineStatusChanged?(peerId, false)
             }
         }

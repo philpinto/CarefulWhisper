@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D8729F232F495FC600B53E53 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D8729F222F495FC600B53E53 /* README.md */; };
+		D8729F252F495FDC00B53E53 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = D8729F242F495FDC00B53E53 /* CHANGELOG.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D8E796952F4915FB00F95947 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +29,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D8729F222F495FC600B53E53 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		D8729F242F495FDC00B53E53 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		D8E796872F4915FA00F95947 /* CarefulWhisper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CarefulWhisper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8E796942F4915FB00F95947 /* CarefulWhisperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CarefulWhisperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8E7969E2F4915FB00F95947 /* CarefulWhisperUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CarefulWhisperUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -79,6 +86,8 @@
 				D8E796972F4915FB00F95947 /* CarefulWhisperTests */,
 				D8E796A12F4915FB00F95947 /* CarefulWhisperUITests */,
 				D8E796882F4915FA00F95947 /* Products */,
+				D8729F222F495FC600B53E53 /* README.md */,
+				D8729F242F495FDC00B53E53 /* CHANGELOG.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -212,6 +221,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8729F232F495FC600B53E53 /* README.md in Resources */,
+				D8729F252F495FDC00B53E53 /* CHANGELOG.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

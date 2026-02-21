@@ -70,8 +70,7 @@ struct ConversationListView: View {
                     displayName: viewModel.displayName(for: conversation),
                     lastMessage: viewModel.lastMessagePreview(for: conversation),
                     time: viewModel.formattedTime(for: conversation),
-                    unreadCount: viewModel.unreadCount(for: conversation),
-                    isOnline: conversation.participants.first?.isOnline ?? false
+                    unreadCount: viewModel.unreadCount(for: conversation)
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -95,32 +94,19 @@ struct ConversationRowView: View {
     let lastMessage: String
     let time: String
     let unreadCount: Int
-    let isOnline: Bool
     
     var body: some View {
         HStack(spacing: 12) {
-            // Avatar with online indicator
-            ZStack(alignment: .bottomTrailing) {
-                Circle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 50, height: 50)
-                    .overlay {
-                        Text(String(displayName.prefix(1)).uppercased())
-                            .font(.title2)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.primary)
-                    }
-                
-                if isOnline {
-                    Circle()
-                        .fill(Color.green)
-                        .frame(width: 14, height: 14)
-                        .overlay {
-                            Circle()
-                                .stroke(Color(.systemBackground), lineWidth: 2)
-                        }
+            // Avatar
+            Circle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 50, height: 50)
+                .overlay {
+                    Text(String(displayName.prefix(1)).uppercased())
+                        .font(.title2)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
                 }
-            }
             
             // Content
             VStack(alignment: .leading, spacing: 4) {
@@ -166,9 +152,6 @@ struct ConversationRowView: View {
     
     private var accessibilityDescription: String {
         var description = "Conversation with \(displayName)"
-        if isOnline {
-            description += ", online"
-        }
         if unreadCount > 0 {
             description += ", \(unreadCount) unread message\(unreadCount == 1 ? "" : "s")"
         }
@@ -217,17 +200,9 @@ struct NewConversationView: View {
                                             .font(.headline)
                                     }
                                 
-                                VStack(alignment: .leading) {
-                                    Text(contact.displayName)
-                                        .font(.body)
-                                        .foregroundStyle(.primary)
-                                    
-                                    if contact.isOnline {
-                                        Text("Online")
-                                            .font(.caption)
-                                            .foregroundStyle(.green)
-                                    }
-                                }
+                                Text(contact.displayName)
+                                    .font(.body)
+                                    .foregroundStyle(.primary)
                                 
                                 Spacer()
                             }

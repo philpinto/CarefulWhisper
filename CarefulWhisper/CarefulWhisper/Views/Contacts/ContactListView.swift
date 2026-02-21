@@ -166,22 +166,10 @@ struct ContactRow: View {
                         .foregroundStyle(.white)
                 }
             
-            // Name and status
-            VStack(alignment: .leading, spacing: 2) {
-                Text(contact.displayName)
-                    .font(.body)
-                    .fontWeight(.medium)
-                
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(contact.isOnline ? Color.green : Color.gray)
-                        .frame(width: 8, height: 8)
-                    
-                    Text(contact.isOnline ? "Online" : "Offline")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            // Name
+            Text(contact.displayName)
+                .font(.body)
+                .fontWeight(.medium)
             
             Spacer()
             

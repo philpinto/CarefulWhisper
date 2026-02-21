@@ -36,16 +36,8 @@ struct ChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                VStack(spacing: 0) {
-                    Text(viewModel.recipientName)
-                        .font(.headline)
-                    
-                    if viewModel.isRecipientOnline {
-                        Text("Online")
-                            .font(.caption)
-                            .foregroundStyle(.green)
-                    }
-                }
+                Text(viewModel.recipientName)
+                    .font(.headline)
             }
             
             ToolbarItem(placement: .primaryAction) {

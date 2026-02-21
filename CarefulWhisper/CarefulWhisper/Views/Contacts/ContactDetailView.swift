@@ -84,17 +84,6 @@ struct ContactDetailView: View {
             Text(contact.displayName)
                 .font(.title2)
                 .fontWeight(.bold)
-            
-            // Status
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(contact.isOnline ? Color.green : Color.gray)
-                    .frame(width: 10, height: 10)
-                
-                Text(contact.isOnline ? "Online" : "Offline")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
         }
         .padding(.top)
     }

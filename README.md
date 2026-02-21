@@ -8,7 +8,7 @@ A privacy-focused, end-to-end encrypted peer-to-peer messaging app for iOS. No s
 - **Peer-to-Peer Communication**: Direct device-to-device messaging via Multipeer Connectivity - no central servers
 - **QR Code Contact Exchange**: Add contacts by scanning QR codes containing their public key
 - **Message Status Tracking**: Real-time delivery confirmations and read receipts
-- **Online Presence**: See when your contacts are nearby and available
+- **Local Notifications**: Get notified when new messages arrive
 - **Auto-Delete Messages**: Configurable message retention (7 days, 30 days, 90 days, 1 year, or never)
 - **Privacy by Design**: Messages stored only on your device, keys never leave your device
 - **Accessibility**: Full VoiceOver support for visually impaired users
@@ -119,6 +119,7 @@ The project includes 70 unit tests covering:
 | 7 | Message Delivery & Status | Complete |
 | 8 | watchOS Companion | Planned |
 | 9 | Polish & Settings | Complete |
+| 10 | Relay Server (Internet Messaging) | Planned |
 
 ## Privacy Policy
 

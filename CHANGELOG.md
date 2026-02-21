@@ -8,9 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
+- Relay server for internet messaging (when not on same network)
 - watchOS companion app with quick replies
-- Push notifications for new messages
+- Push notifications via APNs
 - Group messaging support
+
+---
+
+## [1.0.1] - 2026-02-20
+
+### Added
+- Local notifications for incoming messages when app is in background
+- Contact request notifications
+
+### Changed
+- Removed online/offline status indicators from UI
+
+### Fixed
+- Contact request handling when re-adding deleted contacts
+- Conversation lookup by public key when peer ID changes
+- Sheet presentation for contact request acceptance
 
 ---
 
@@ -107,6 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.0.1 | 2026-02-20 | Local notifications, bug fixes |
 | 1.0.0 | 2026-02-20 | Initial release with full messaging functionality |
 
 ---
